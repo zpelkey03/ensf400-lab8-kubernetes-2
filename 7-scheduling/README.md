@@ -340,3 +340,35 @@ Finally we can clean up the resources created:
 ```
 kubectl delete -f pod-with-node-affinity.yaml
 ```
+
+# Node Anti-affinity
+
+While Kubernetes scheduler will ensure all of pods get places on healthy nodes with sufficient resources, the scheduler will not take in to account which pods get placed on which nodes based on the application running in the pod. This means you could end up in a situation where all your pods from a particular deployment are all placed on the same node. The downside of such cases is that it puts that application in risk of failure in case that single node goes down.
+
+What we really want is for the pods to be spread out among all the nodes as to increase the size of the point of failure. It’s less likely for multiple nodes to go down all at once than for one node to go down. — We are going to use pod anti-affinity to direct the scheduler to place our pods with a strategy for high availability.
+
+Pod anti-affinity allows us to accomplish the opposite of pod affinity, ensuring certain pods don’t run on the same node as other pods. We are going to use this to make sure our pods that run the same application are spread among multiple nodes. To do this, we will tell the scheduler to not place a pod with a particular label onto a node that contains a pod with the same label.
+
+## Steps
+```bash
+kubectl apply -f deploy-with-node-anti-affinity.yaml
+```
+## Viewing Your Pods
+
+```bash
+$ kubectl get pods -o wide
+NAME                    READY   STATUS    RESTARTS   AGE   IP           NODE          NOMINATED NODE   READINESS GATES
+nginx-c4f46d545-2cv59   1/1     Running   0          82s   10.244.0.3   ensf400       <none>           <none>
+nginx-c4f46d545-dp88k   1/1     Running   0          82s   10.244.1.2   ensf400-m02   <none>           <none>
+nginx-c4f46d545-x72ff   1/1     Running   0          83s   10.244.2.2   ensf400-m03   <none>           <none>
+```
+
+As you can see, we have 3 pods with a label `app: nginx`. In our affinity instructions, we specify a `podAntiAffinity` that tells the scheduler to not place this pod on a node with an existing pod with the label `app: nginx`. This ensures that if we will have the pods spread over multiple nodes.
+
+
+## Step  Cleanup
+
+Finally you can clean up the resources you created in your cluster:
+```
+kubectl delete -f deploy-with-node-anti-affinity.yaml
+```
