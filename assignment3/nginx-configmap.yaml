@@ -3,14 +3,22 @@ kind: ConfigMap
 metadata:
   name: nginx-configmap
 data:
-  nginx.cfg: |
-    upstream backend {
-        server app-1:8080;
-        server app-2:8080;
+  nginx.conf: |
+    events {
+    worker_connections 1024;
     }
+    
+    http {
+          upstream backend {
+            server app-1-svc:8080;
+            server app-2-svc:8080;
+          }
 
-    server {
-        location / {
-            proxy_pass http://backend;
+          server {
+            listen 8080;
+
+            location / {
+              proxy_pass http://backend;
+            }
+          }
         }
-    }
